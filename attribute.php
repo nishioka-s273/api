@@ -1,30 +1,27 @@
 <?php
-// SPが認可に使う属性値および認可ポリシーを受け取り認可結果を返すAPI
+// 認可に必要な属性とマジックプロトコルに用いる公開鍵をIdPに返すAPI
+require "returnJson.php";
 
-function returnJson($resultArray) {
-    if(array_key_exists('callback', $_GET)){
-        $json = $_GET['callback'] . "(" . json_encode($resultArray) . ");";
-    } else {
-        $json = json_encode($resultArray);
-    }
+// 必要な属性を含むJSONファイルを取ってくる
+$attr_file = "/var/www/datas/attr.json";
+$json = file_get_contents($attr_file);
+$json = mb_convert_encoding($json, 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
+$array = json_decode($json, true);
 
-    header("Access-Control-Allow-Origin: https://idp1.local");
-    echo $json;
-    exit(0);
-}
+$attributes = $array['attributes']; // 属性
+
+// opensslで公開鍵・秘密鍵のペアを取ってくる (予め用意する)
+$keyPath = realpath("../")."/datas/public.pem";
+$key = file_get_contents($keyPath);
 
 // リクエスト受付
-$attr = explode(',', $_REQUEST['attr']);
-$attr_val = explode(',', $_REQUEST['attr_val']);
-
-// 初期化
-// $user_list = [];
+$returnOrigin = $_REQUEST['returnOrigin'];
 
 // 返却値初期化
 $result = [];
 
 try {
-    if(empty($attr) || empty($attr_val)) {
+    if(empty($returnOrigin) || empty($attributes)) {
         throw new Exception("no type...");
     }
 
@@ -32,12 +29,8 @@ try {
     $num = 1;
     $result = [
         'result' => 'OK',
-        'attribute1' => $attr[0],
-        'attribute2' => $attr[1],
-        'attribute3' => $attr[2],
-        'value1' => $attr_val[0],
-        'value2' => $attr_val[1],
-        'value3' => $attr_val[2]
+        'attributes' => $attributes,
+        'key' => $key
     ];
 } catch (Exception $e) {
     $result = [
@@ -47,5 +40,5 @@ try {
 }
 
 // レスポンスを返す
-returnJson($result);
+returnJson($result, $returnOrigin);
 ?>
