@@ -1,6 +1,7 @@
 <?php
 // 認可に必要な属性とマジックプロトコルに用いる公開鍵をIdPに返すAPI
 require "returnJson.php";
+require "setup.php";
 
 // 必要な属性を含むJSONファイルを取ってくる
 $attr_file = "/var/www/datas/attr.json";
@@ -9,10 +10,24 @@ $json = mb_convert_encoding($json, 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
 $array = json_decode($json, true);
 
 $attributes = $array['attributes']; // 属性
+//print_r($attributes);
 
+/*
 // opensslで公開鍵・秘密鍵のペアを取ってくる (予め用意する)
 $keyPath = realpath("../")."/datas/public.pem";
 $key = file_get_contents($keyPath);
+*/
+
+$setup = setup();
+$key = [
+    'a' => htmlspecialchars($setup['a']),
+    'b' => htmlspecialchars($setup['b']),
+    'p' => htmlspecialchars($setup['p']),
+    'r' => htmlspecialchars($setup['r']),
+    'Y' => $setup['Y']
+];
+
+//print_r($key);
 
 // リクエスト受付
 $returnOrigin = $_REQUEST['returnOrigin'];
@@ -21,7 +36,7 @@ $returnOrigin = $_REQUEST['returnOrigin'];
 $result = [];
 
 try {
-    if(empty($returnOrigin) || empty($attributes)) {
+    if(empty($returnOrigin) || empty($attributes) || empty($key)) {
         throw new Exception("no type...");
     }
 
@@ -40,5 +55,5 @@ try {
 }
 
 // レスポンスを返す
-returnJson($result, $returnOrigin);
+echo returnJson($result, $returnOrigin);
 ?>
