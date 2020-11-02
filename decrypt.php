@@ -14,4 +14,4 @@ function decrypt($c, $r, $x, $G, $a, $b, $p){
     return $output[0];
 }
 
-echo decrypt(23, 3, 3, [2,2], 0, 1, 5);
+//echo decrypt(23, 3, 3, [2,2], 0, 1, 5);

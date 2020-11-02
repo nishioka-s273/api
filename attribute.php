@@ -3,6 +3,9 @@
 require "returnJson.php";
 require "setup.php";
 
+session_start();
+$session_id = session_id();
+
 // 必要な属性を含むJSONファイルを取ってくる
 $attr_file = "/var/www/datas/attr.json";
 $json = file_get_contents($attr_file);
@@ -10,13 +13,6 @@ $json = mb_convert_encoding($json, 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
 $array = json_decode($json, true);
 
 $attributes = $array['attributes']; // 属性
-//print_r($attributes);
-
-/*
-// opensslで公開鍵・秘密鍵のペアを取ってくる (予め用意する)
-$keyPath = realpath("../")."/datas/public.pem";
-$key = file_get_contents($keyPath);
-*/
 
 $setup = setup();
 $key = [
@@ -27,7 +23,14 @@ $key = [
     'Y' => $setup['Y']
 ];
 
-//print_r($key);
+$_SESSION['ID'] = $session_id;
+$_SESSION['secret_key']['x'] = $setup['x'];
+$_SESSION['secret_key']['G'] = $setup['G'];
+$_SESSION['public_key']['a'] = $setup['a'];
+$_SESSION['public_key']['b'] = $setup['b'];
+$_SESSION['public_key']['p'] = $setup['p'];
+$_SESSION['public_key']['r'] = $setup['r'];
+$_SESSION['public_key']['Y'] = $setup['Y'];
 
 // リクエスト受付
 $returnOrigin = $_REQUEST['returnOrigin'];
@@ -45,7 +48,8 @@ try {
     $result = [
         'result' => 'OK',
         'attributes' => $attributes,
-        'key' => $key
+        'key' => $key,
+        'session_id' => $session_id
     ];
 } catch (Exception $e) {
     $result = [
