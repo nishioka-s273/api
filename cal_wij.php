@@ -17,25 +17,53 @@ session_start();
 // 暗号化・復号に使う鍵をattribute.phpから取得 (同一セッション)
 $pk = $_SESSION['public_key'];
 $sk = $_SESSION['secret_key'];
-//$public_key = $pk['a']+$pk['b']+$pk['p']+$pk['r']+$pk['Y'][0]+$pk['Y'][1]+$sk['x']+$sk['G'][0]+$sk['G'][1];
 
-// v_{ij}を作成する
+// v_{i}{j}を作成する
 $vij = [];
 $i = 0;
 foreach ($z as $zi) {
-    // とりあえず 1<=z_{i}<=100とする
-    for ($j=0; $j<100; $j++) {
+    // とりあえず 1<=z_{i}<=10とする
+    // z_{i}{j}は，zij[$i+1][$j+1]に相当
+    for ($j=0; $j<10; $j++) {
         $zij = $zi + $j + 1;
         $vij[$i][$j] = decrypt($zij, $pk['r'], $sk['x'], $sk['G'], $pk['a'], $pk['b'], $pk['p']);
     }
     $i = $i + 1;
 }
 
+// 閾値を取ってくる
+$thres_file = "/var/www/datas/threshold.json";
+$json = file_get_contents($thres_file);
+$json = mb_convert_encoding($json, 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
+$array = json_decode($json, true);
+
+$thresholds = $array['thresholds'];
+
+if (count($thresholds) !== count($z)) {
+    die("threshold values and attribute values must be the same amount");
+}
+
+// 一方向ハッシュ関数を定義
+$hash_function = 'hash_hmac'; // hash_hmacを使用
+$algo = 'ripemd160'; // ripemd160 を使用
+$key = 'secret';  // 共有鍵
+
+// w_{i}{j}を作成する
+$wij = [];
+for ($k=0; $k<count($z); $k++) {
+    for ($l=0; $l<$thresholds[$k]; $l++) {
+        $wij[$k][$l] = hexdec(hash_hmac($algo, $vij[$k][$l], $key));
+    }
+    for ($l=$thresholds[$k]; $l<10; $l++) {
+        $wij[$k][$l] = hexdec(hash_hmac($algo, $vij[$k][$l], $key)) + 1;
+    }
+}
+
 // 返却値初期化
 $result = [];
 
 try {
-    if(empty($returnOrigin) || empty($z) || empty($vij)) {
+    if(empty($returnOrigin) || empty($z) || empty($vij) || empty($wij)) {
         throw new Exception("no type...");
     }
 
@@ -44,9 +72,10 @@ try {
     $num = 1;
     $result = [
         'result' => 'OK',
-        'zi' => $z,
-        'session_id' => $session_id,
-        'w_ij' => $vij,
+        'hash_function' => $hash_function,
+        'algo' => $algo,
+        'key' => $key,
+        'w_ij' => $wij,
     ];
 } catch (Exception $e) {
     $result = [
