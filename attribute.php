@@ -1,7 +1,7 @@
 <?php
 // 認可に必要な属性とマジックプロトコルに用いる公開鍵をIdPに返すAPI
-require "returnJson.php";
-require "setup.php";
+require_once "returnJson.php";
+require_once "setup.php";
 
 session_start();
 $session_id = session_id();

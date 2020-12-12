@@ -1,6 +1,8 @@
 <?php
-require "returnJson.php";
-require "decrypt.php";
+require_once "returnJson.php";
+require_once "decrypt.php";
+require_once "bdd.php";
+
 // IdP から z_i を受け取り，w_{ij}を計算して返す
 
 // リクエストパラメータを取得
@@ -12,7 +14,6 @@ $z = explode(",", $req_z);
 $session_id = $_REQUEST['session_id'];
 
 session_start();
-//$session_id = session_id();
 
 // 暗号化・復号に使う鍵をattribute.phpから取得 (同一セッション)
 $pk = $_SESSION['public_key'];
@@ -59,6 +60,22 @@ for ($k=0; $k<count($z); $k++) {
     }
 }
 
+
+// 紛失通信に用いるランダム値 (r_0, r_1) , (r_200, r_201, r_210, r_211) ,... , を生成する
+// BDDを取ってくる
+$bdd = $az_bdd;
+$depth = $bdd->depth;
+$random = [];
+$j = 0;
+foreach ($bdd->v_node as $vn) {
+    for ($k=0; $k<count($vn)*2; $k++){
+        $random[$j][$k] = random_int(1,100);
+    }
+    $j++;
+}
+// セッションに保存
+$_SESSION['random'] = $random;
+
 // 返却値初期化
 $result = [];
 
@@ -66,7 +83,6 @@ try {
     if(empty($returnOrigin) || empty($z) || empty($vij) || empty($wij)) {
         throw new Exception("no type...");
     }
-
 
     // 返却値の作成
     $num = 1;
@@ -76,6 +92,8 @@ try {
         'algo' => $algo,
         'key' => $key,
         'w_ij' => $wij,
+        'random' => $random,
+        'session_id' => session_id(),
     ];
 } catch (Exception $e) {
     $result = [

@@ -2,7 +2,7 @@
 
 function returnJson($resultArray, $origin) {
     if(array_key_exists('callback', $_GET)){
-        $json = $_GET['callback'] . "(" . json_encode($resultArray) . ");";
+        $json = $_GET['callback'] . "(" . json_encode($resultArray, JSON_UNESCAPED_UNICODE) . ");";
     } else {
         $json = json_encode($resultArray);
     }
@@ -11,6 +11,6 @@ function returnJson($resultArray, $origin) {
         header("Access-Control-Allow-Origin: https://".$origin);
     }
 
-    echo $json;
+    return $json;
     exit(0);
 }
