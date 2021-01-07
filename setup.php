@@ -15,6 +15,7 @@ function setup() {
     $ret['Y'] = substr($output[0],1);
     $ret['Y'] = substr($ret['Y'], 0, -1);
     $ret['Y'] = explode(',', $ret['Y']);
+    $ret['Y'][1] = substr($ret['Y'][1], 1);
 
     return $ret;
     exit(0);

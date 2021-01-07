@@ -71,10 +71,10 @@ $c33->next1 = $c43;
 // c_4 (4-1)
 $c41->name = 41;
 $c41->next0 = $c51;
-$c41->next1 = $c51;
+$c41->next1 = $c52;
 // c_4 (4-2)
 $c42->name = 42;
-$c42->next0 = $c52;
+$c42->next0 = $c51;
 $c42->next1 = $c52;
 // c_4 (4-3)
 $c43->name = 43;
@@ -95,9 +95,9 @@ $c53->next1 = $c1;
 
 // 定数節点
 // ０
-$c0->name = 0;
+$c0->name = 0; // 1:dummy, 2:true のオーダー
 // 1
-$c1->name = 1;
+$c1->name = 1; // 1:true, 2:dummy のオーダー
 
 // 深さ
 $az_bdd->depth = 5;
